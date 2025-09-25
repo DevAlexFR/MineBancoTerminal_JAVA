@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -12,13 +14,10 @@ import java.util.logging.Level;
 
 // Aqui temos o nosso front kkkkk a Classe principal do mini banco, usando o CrudUtils que e tudo referente a CRUD ta la...
 public class MiniBanco {
-
     private final Banco banco = new Banco();
     private final Scanner sc = new Scanner(System.in);
     private final Path arquivo = Path.of("project/arquivos", "contas.csv");
     private static final Logger logger = Logger.getLogger(MiniBanco.class.getName());
-
-    // Instancia para registrar extrato das operações
     private final Extrato extrato = new Extrato();
 
     public void executar() {
@@ -35,10 +34,12 @@ public class MiniBanco {
             System.out.println("\n=== MINI BANCO ===");
             System.out.println("1) Criar conta");
             System.out.println("2) Depositar");
-            System.out.println("3) Sacar");
+            System.out.println("3) Sacar até 1.000,00");
             System.out.println("4) Transferir");
             System.out.println("5) Listar contas por saldo (desc)");
             System.out.println("6) Salvar e sair");
+            System.out.println("7) Importar contas de arquivo");
+            System.out.println("8) Pesquisar contas por titular (paginado)");
             System.out.print("Escolha: ");
             String op = sc.nextLine().trim();
 
@@ -69,6 +70,11 @@ public class MiniBanco {
                             System.out.println("Erro ao salvar: " + e.getMessage());
                         }
                     }
+                    case "7" -> {
+                        logger.info("7 Selecionado importar contas de arquivo");
+                        importarContas();
+                    }
+                    case "8" -> pesquisarContasPaginado();
                     default -> System.out.println("Opção inválida.");
                 }
             } catch (Exception e) {
@@ -78,6 +84,52 @@ public class MiniBanco {
 
         }
     }
+
+
+    private void pesquisarContasPaginado() {
+        System.out.print("Digite parte do nome do titular para pesquisar: ");
+        String filtro = sc.nextLine().trim();
+        int pagina = 1;
+        final int tamanhoPagina = 5;
+        List<Conta> paginaContas;
+
+        do {
+            paginaContas = CrudUtils.listarContasFiltradasPaginadas(banco, filtro, pagina, tamanhoPagina);
+            if (paginaContas.isEmpty()) {
+                if (pagina == 1) {
+                    System.out.println("Nenhuma conta encontrada.");
+                } else {
+                    System.out.println("Fim da lista.");
+                }
+                break;
+            }
+            System.out.println("Página " + pagina + ":");
+            for (Conta c : paginaContas) {
+                System.out.println(c);
+            }
+            System.out.print("Digite N para próxima página, qualquer outra tecla para sair: ");
+            String op = sc.nextLine().trim();
+            if (!op.equalsIgnoreCase("N")) {
+                break;
+            }
+            pagina++;
+        } while (true);
+    }
+
+
+    private void importarContas() {
+        System.out.print("Informe o caminho do arquivo para importar contas: ");
+        String caminho = sc.nextLine().trim();
+        Path arquivoImportacao = Paths.get(caminho);
+        List<String> erros = banco.importarContas(arquivoImportacao);
+        if (erros.isEmpty()) {
+            System.out.println("Importação finalizada com sucesso!");
+        } else {
+            System.out.println("Importação finalizada com erros:");
+            erros.forEach(System.out::println);
+        }
+    }
+
 
     private void criarConta() {
         logger.info("1 Selecionado Criar Conta");
@@ -107,6 +159,7 @@ public class MiniBanco {
         System.out.println("Conta criada!");
     }
 
+
     private void depositar() {
         logger.info("2 Selecionado depositar");
         System.out.print("Conta: ");
@@ -124,6 +177,7 @@ public class MiniBanco {
         }
     }
 
+
     private void sacar() {
         logger.info("3 Selecionado Sacar");
         System.out.print("Conta: ");
@@ -140,6 +194,7 @@ public class MiniBanco {
             logger.warning("Erro ao tentar sacar: " + e.getMessage());
         }
     }
+
 
     private void transferir() {
         logger.info("4 Selecionado transferir");
