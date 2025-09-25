@@ -2,10 +2,11 @@ package project.data;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.file.Path;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -15,6 +16,11 @@ import java.util.logging.Logger;
 public class Banco {
     private static final Logger logger = Logger.getLogger(Banco.class.getName());
     private final Map<String, Conta> contas = new HashMap<>();
+
+    // Controle de saques diários por conta
+    private final Map<String, BigDecimal> saquesDiarios = new HashMap<>();
+    private LocalDate dataUltimoSaque = LocalDate.now();
+    private final BigDecimal limiteDiario = new BigDecimal("1000.00");  // Limite diário de saque
 
     public Conta criarConta(String numero, String titular, BigDecimal saldoInicial) {
         logger.info("Criando conta - Número: " + numero + ", Titular: " + titular + ", Saldo inicial: " + saldoInicial);
@@ -27,20 +33,51 @@ public class Banco {
 
     public Conta getConta(String numero) {
         Conta c = contas.get(numero);
-        if (c == null)
-            throw new NoSuchElementException("Conta não encontrada: " + numero);
+        if (c == null) {
             logger.severe("Conta não encontrada: " + numero);
+            throw new NoSuchElementException("Conta não encontrada: " + numero);
+        }
         return c;
     }
 
     public void transferir(String de, String para, BigDecimal valor) {
-        if (de.equals(para))
-            throw new IllegalArgumentException("Contas de origem e destino não podem ser iguais.");
+        if (de.equals(para)) {
             logger.severe("Contas de origem e destino não podem ser iguais.");
+            throw new IllegalArgumentException("Contas de origem e destino não podem ser iguais.");
+        }
         Conta origem = getConta(de);
         Conta destino = getConta(para);
         origem.sacar(valor);
         destino.depositar(valor);
+    }
+
+    // Metodo para atualizar controle dos saques diários, limpando ao mudar o dia
+    private void verificarData() {
+        LocalDate hoje = LocalDate.now();
+        if (!hoje.equals(dataUltimoSaque)) {
+            saquesDiarios.clear();
+            dataUltimoSaque = hoje;
+            logger.info("Limpeza do controle diário de saques para novo dia: " + hoje);
+        }
+    }
+
+    //Método sacar modificado para bloqueio por limite diário
+    public void sacar(String numero, BigDecimal valor) {
+        verificarData();
+
+        BigDecimal totalSacadoHoje = saquesDiarios.getOrDefault(numero, BigDecimal.ZERO);
+        if (totalSacadoHoje.add(valor).compareTo(limiteDiario) > 0) {
+            logger.warning("Tentativa de saque acima do limite diário para conta " + numero +
+                ". Valor solicitado: " + valor + ", Já sacado hoje: " + totalSacadoHoje +
+                ", Limite diário: " + limiteDiario);
+            throw new IllegalArgumentException("Limite diário de saque ultrapassado.");
+        }
+
+        Conta conta = getConta(numero);
+
+        conta.sacar(valor);
+        saquesDiarios.put(numero, totalSacadoHoje.add(valor));
+        logger.info("Saque efetuado para conta " + numero + ", valor: " + valor);
     }
 
     public List<Conta> listarOrdenadasPorSaldoDesc() {
