@@ -3,8 +3,6 @@ package project.data;
 import java.math.BigDecimal;
 import java.util.List;
 
-
-
 // Aqui quis demonstrar o CRUD em Classe utilitária para operações CRUD de contas.
 public class CrudUtils {
 
@@ -13,19 +11,22 @@ public class CrudUtils {
         return banco.criarConta(numero, titular, saldoInicial);
     }
 
-    // Deposita valor na conta
-    public static void depositar(Banco banco, String numero, BigDecimal valor) {
+    // Deposita valor na conta, registra no extrato
+    public static void depositar(Banco banco, String numero, BigDecimal valor, Extrato extrato) {
         banco.getConta(numero).depositar(valor);
+        extrato.registrar("depósito", numero, null, valor);
     }
 
-    // Realiza saque
-    public static void sacar(Banco banco, String numero, BigDecimal valor) {
+    // Realiza saque, registra no extrato
+    public static void sacar(Banco banco, String numero, BigDecimal valor, Extrato extrato) {
         banco.getConta(numero).sacar(valor);
+        extrato.registrar("saque", numero, null, valor);
     }
 
-    // Realiza transferência
-    public static void transferir(Banco banco, String de, String para, BigDecimal valor) {
+    // Realiza transferência, registra no extrato
+    public static void transferir(Banco banco, String de, String para, BigDecimal valor, Extrato extrato) {
         banco.transferir(de, para, valor);
+        extrato.registrar("transferência", de, para, valor);
     }
 
     // Lista contas ordenadas por saldo
