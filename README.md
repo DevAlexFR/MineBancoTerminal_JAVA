@@ -3,9 +3,11 @@
 Um sistema simples de banco construído em Java para fins didáticos e práticos, permitindo operações básicas como criar conta, depósito, saque com limite diário, transferência, listagem, importação de contas e registro de extrato em CSV.
 
 
-Para funcionar recompile todos os arquivos Java do projeto para garantir que todas as classes estejam compiladas !! 
-javac -d bin $(find ./project -name "*.java")
+Para funcionar recompile todos os arquivos Java do projeto para garantir que todas as classes estejam compiladas !!
 
+```
+  javac -d bin $(find ./project -name "*.java")
+```
 
 ## Funcionalidades
 
