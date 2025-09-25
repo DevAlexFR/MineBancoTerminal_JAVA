@@ -19,22 +19,27 @@ public class Conta {
             this.saldo = saldoInicial.setScale(2, RoundingMode.HALF_UP);
     }
 
+
     public String getNumero() {
         return numero;
     }
+
 
     public String getTitular() {
         return titular;
     }
 
+
     public BigDecimal getSaldo() {
         return saldo;
     }
+
 
     public void depositar(BigDecimal valor) {
         validarValor(valor);
         saldo = saldo.add(valor).setScale(2, RoundingMode.HALF_UP);
     }
+
 
     public void sacar(BigDecimal valor) {
         validarValor(valor);
@@ -44,12 +49,14 @@ public class Conta {
         saldo = saldo.subtract(valor).setScale(2, RoundingMode.HALF_UP);
     }
 
+
     private static void validarValor(BigDecimal v) {
         if (v == null || v.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Valor deve ser positivo.");
         }
     }
 
+    
     @Override
     public String toString() {
         return numero + " | " + titular + " | R$ " + saldo;

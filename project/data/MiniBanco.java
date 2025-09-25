@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -12,13 +14,10 @@ import java.util.logging.Level;
 
 // Aqui temos o nosso front kkkkk a Classe principal do mini banco, usando o CrudUtils que e tudo referente a CRUD ta la...
 public class MiniBanco {
-
     private final Banco banco = new Banco();
     private final Scanner sc = new Scanner(System.in);
     private final Path arquivo = Path.of("project/arquivos", "contas.csv");
     private static final Logger logger = Logger.getLogger(MiniBanco.class.getName());
-
-    // Instancia para registrar extrato das operações
     private final Extrato extrato = new Extrato();
 
     public void executar() {
@@ -39,6 +38,7 @@ public class MiniBanco {
             System.out.println("4) Transferir");
             System.out.println("5) Listar contas por saldo (desc)");
             System.out.println("6) Salvar e sair");
+            System.out.println("7) Importar contas de arquivo");
             System.out.print("Escolha: ");
             String op = sc.nextLine().trim();
 
@@ -69,6 +69,10 @@ public class MiniBanco {
                             System.out.println("Erro ao salvar: " + e.getMessage());
                         }
                     }
+                    case "7" -> {
+                        logger.info("7 Selecionado importar contas de arquivo");
+                        importarContas();
+                    }
                     default -> System.out.println("Opção inválida.");
                 }
             } catch (Exception e) {
@@ -78,6 +82,21 @@ public class MiniBanco {
 
         }
     }
+
+
+    private void importarContas() {
+        System.out.print("Informe o caminho do arquivo para importar contas: ");
+        String caminho = sc.nextLine().trim();
+        Path arquivoImportacao = Paths.get(caminho);
+        List<String> erros = banco.importarContas(arquivoImportacao);
+        if (erros.isEmpty()) {
+            System.out.println("Importação finalizada com sucesso!");
+        } else {
+            System.out.println("Importação finalizada com erros:");
+            erros.forEach(System.out::println);
+        }
+    }
+
 
     private void criarConta() {
         logger.info("1 Selecionado Criar Conta");
@@ -107,6 +126,7 @@ public class MiniBanco {
         System.out.println("Conta criada!");
     }
 
+
     private void depositar() {
         logger.info("2 Selecionado depositar");
         System.out.print("Conta: ");
@@ -124,6 +144,7 @@ public class MiniBanco {
         }
     }
 
+
     private void sacar() {
         logger.info("3 Selecionado Sacar");
         System.out.print("Conta: ");
@@ -140,6 +161,7 @@ public class MiniBanco {
             logger.warning("Erro ao tentar sacar: " + e.getMessage());
         }
     }
+
 
     private void transferir() {
         logger.info("4 Selecionado transferir");

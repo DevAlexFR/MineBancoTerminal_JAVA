@@ -2,12 +2,13 @@ package project.data;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
@@ -16,11 +17,10 @@ import java.util.logging.Logger;
 public class Banco {
     private static final Logger logger = Logger.getLogger(Banco.class.getName());
     private final Map<String, Conta> contas = new HashMap<>();
-
-    // Controle de saques diários por conta
     private final Map<String, BigDecimal> saquesDiarios = new HashMap<>();
     private LocalDate dataUltimoSaque = LocalDate.now();
-    private final BigDecimal limiteDiario = new BigDecimal("1000.00");  // Limite diário de saque
+    private final BigDecimal limiteDiario = new BigDecimal("1000.00");
+
 
     public Conta criarConta(String numero, String titular, BigDecimal saldoInicial) {
         logger.info("Criando conta - Número: " + numero + ", Titular: " + titular + ", Saldo inicial: " + saldoInicial);
@@ -31,6 +31,7 @@ public class Banco {
         return c;
     }
 
+
     public Conta getConta(String numero) {
         Conta c = contas.get(numero);
         if (c == null) {
@@ -39,6 +40,7 @@ public class Banco {
         }
         return c;
     }
+
 
     public void transferir(String de, String para, BigDecimal valor) {
         if (de.equals(para)) {
@@ -51,7 +53,7 @@ public class Banco {
         destino.depositar(valor);
     }
 
-    // Metodo para atualizar controle dos saques diários, limpando ao mudar o dia
+
     private void verificarData() {
         LocalDate hoje = LocalDate.now();
         if (!hoje.equals(dataUltimoSaque)) {
@@ -61,7 +63,7 @@ public class Banco {
         }
     }
 
-    //Método sacar modificado para bloqueio por limite diário
+
     public void sacar(String numero, BigDecimal valor) {
         verificarData();
 
@@ -80,11 +82,13 @@ public class Banco {
         logger.info("Saque efetuado para conta " + numero + ", valor: " + valor);
     }
 
+
     public List<Conta> listarOrdenadasPorSaldoDesc() {
         List<Conta> lst = new ArrayList<>(contas.values());
         lst.sort(Comparator.comparing(Conta::getSaldo).reversed());
         return lst;
     }
+
 
     public void salvar(Path path) throws IOException {
         List<String> linhas = new ArrayList<>();
@@ -94,6 +98,7 @@ public class Banco {
         }
         Files.write(path, linhas, StandardCharsets.UTF_8);
     }
+
 
     public void carregar(Path path) throws IOException {
         contas.clear();
@@ -109,5 +114,54 @@ public class Banco {
             BigDecimal saldo = new BigDecimal(p[2]).setScale(2, RoundingMode.HALF_UP);
             contas.put(numero, new Conta(numero, titular, saldo));
         }
+    }
+
+
+    public List<String> importarContas(Path path) {
+        List<String> erros = new ArrayList<>();
+        if (!Files.exists(path)) {
+            erros.add("Arquivo não encontrado: " + path.toAbsolutePath());
+            logger.warning("Arquivo para importação não encontrado: " + path.toAbsolutePath());
+            return erros;
+        }
+        try {
+            List<String> linhas = Files.readAllLines(path, StandardCharsets.UTF_8);
+            for (int i = 1; i < linhas.size(); i++) {
+                String linha = linhas.get(i);
+                String[] p = linha.split(";");
+                if (p.length < 3) {
+                    erros.add("Linha " + (i + 1) + ": formato inválido.");
+                    logger.warning("Linha " + (i + 1) + " inválida no arquivo de importação: " + linha);
+                    continue;
+                }
+                String numero = p[0].trim();
+                String titular = p[1].trim();
+                String saldoStr = p[2].trim();
+                BigDecimal saldo;
+                try {
+                    saldo = new BigDecimal(saldoStr).setScale(2, RoundingMode.HALF_UP);
+                    if (saldo.compareTo(BigDecimal.ZERO) < 0) {
+                        erros.add("Linha " + (i + 1) + ": saldo negativo.");
+                        logger.warning("Linha " + (i + 1) + " com saldo negativo: " + saldo);
+                        continue;
+                    }
+                } catch (NumberFormatException e) {
+                    erros.add("Linha " + (i + 1) + ": saldo inválido.");
+                    logger.warning("Linha " + (i + 1) + " com saldo inválido: " + saldoStr);
+                    continue;
+                }
+
+                try {
+                    criarConta(numero, titular, saldo);
+                } catch (IllegalArgumentException e) {
+                    erros.add("Linha " + (i + 1) + ": " + e.getMessage());
+                    logger.warning("Linha " + (i + 1) + ": " + e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            erros.add("Erro ao ler arquivo: " + e.getMessage());
+            logger.log(Level.SEVERE, "Erro ao importar contas: ", e);
+        }
+        return erros;
     }
 }
