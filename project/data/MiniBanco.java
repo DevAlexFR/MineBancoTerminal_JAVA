@@ -39,6 +39,7 @@ public class MiniBanco {
             System.out.println("5) Listar contas por saldo (desc)");
             System.out.println("6) Salvar e sair");
             System.out.println("7) Importar contas de arquivo");
+            System.out.println("8) Pesquisar contas por titular (paginado)");
             System.out.print("Escolha: ");
             String op = sc.nextLine().trim();
 
@@ -73,6 +74,7 @@ public class MiniBanco {
                         logger.info("7 Selecionado importar contas de arquivo");
                         importarContas();
                     }
+                    case "8" -> pesquisarContasPaginado();
                     default -> System.out.println("Opção inválida.");
                 }
             } catch (Exception e) {
@@ -81,6 +83,37 @@ public class MiniBanco {
             }
 
         }
+    }
+
+
+    private void pesquisarContasPaginado() {
+        System.out.print("Digite parte do nome do titular para pesquisar: ");
+        String filtro = sc.nextLine().trim();
+        int pagina = 1;
+        final int tamanhoPagina = 5;
+        List<Conta> paginaContas;
+
+        do {
+            paginaContas = CrudUtils.listarContasFiltradasPaginadas(banco, filtro, pagina, tamanhoPagina);
+            if (paginaContas.isEmpty()) {
+                if (pagina == 1) {
+                    System.out.println("Nenhuma conta encontrada.");
+                } else {
+                    System.out.println("Fim da lista.");
+                }
+                break;
+            }
+            System.out.println("Página " + pagina + ":");
+            for (Conta c : paginaContas) {
+                System.out.println(c);
+            }
+            System.out.print("Digite N para próxima página, qualquer outra tecla para sair: ");
+            String op = sc.nextLine().trim();
+            if (!op.equalsIgnoreCase("N")) {
+                break;
+            }
+            pagina++;
+        } while (true);
     }
 
 

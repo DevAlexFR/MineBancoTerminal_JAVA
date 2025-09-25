@@ -31,4 +31,8 @@ public class CrudUtils {
     public static List<Conta> listarContas(Banco banco) {
         return banco.listarOrdenadasPorSaldoDesc();
     }
+
+    public static List<Conta> listarContasFiltradasPaginadas(Banco banco, String filtro, int pagina, int tamanhoPagina) {
+        return banco.listarContasFiltradasPaginadas(filtro, pagina, tamanhoPagina);
+    }
 }
