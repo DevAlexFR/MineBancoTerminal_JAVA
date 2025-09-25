@@ -19,7 +19,7 @@ public class CrudUtils {
 
     // Realiza saque, registra no extrato
     public static void sacar(Banco banco, String numero, BigDecimal valor, Extrato extrato) {
-        banco.getConta(numero).sacar(valor);
+        banco.sacar(numero, valor);
         extrato.registrar("saque", numero, null, valor);
     }
 

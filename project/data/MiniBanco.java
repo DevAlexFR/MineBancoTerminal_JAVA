@@ -35,7 +35,7 @@ public class MiniBanco {
             System.out.println("\n=== MINI BANCO ===");
             System.out.println("1) Criar conta");
             System.out.println("2) Depositar");
-            System.out.println("3) Sacar");
+            System.out.println("3) Sacar até 1.000,00");
             System.out.println("4) Transferir");
             System.out.println("5) Listar contas por saldo (desc)");
             System.out.println("6) Salvar e sair");
