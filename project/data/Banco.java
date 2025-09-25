@@ -164,4 +164,25 @@ public class Banco {
         }
         return erros;
     }
+
+
+    public List<Conta> listarContasFiltradasPaginadas(String filtroTitular, int pagina, int tamanhoPagina) {
+        String filtroLower = filtroTitular.toLowerCase();
+
+        List<Conta> filtradas = new ArrayList<>();
+        for (Conta c : contas.values()) {
+            if (c.getTitular().toLowerCase().contains(filtroLower)) {
+                filtradas.add(c);
+            }
+        }
+
+        filtradas.sort(Comparator.comparing(Conta::getSaldo).reversed());
+
+        int fromIndex = (pagina - 1) * tamanhoPagina;
+        if (fromIndex >= filtradas.size()) {
+            return List.of();
+        }
+        int toIndex = Math.min(fromIndex + tamanhoPagina, filtradas.size());
+        return filtradas.subList(fromIndex, toIndex);
+    }
 }
