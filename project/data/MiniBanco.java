@@ -15,9 +15,11 @@ public class MiniBanco {
 
     private final Banco banco = new Banco();
     private final Scanner sc = new Scanner(System.in);
-    private final Path arquivo = Path.of("project/data", "contas.csv");
+    private final Path arquivo = Path.of("project/arquivos", "contas.csv");
     private static final Logger logger = Logger.getLogger(MiniBanco.class.getName());
 
+    // Instancia para registrar extrato das operações
+    private final Extrato extrato = new Extrato();
 
     public void executar() {
         try {
@@ -50,13 +52,14 @@ public class MiniBanco {
                         logger.info("5 Selecionado listar contas por saldo (desc)");
                         CrudUtils.listarContas(banco).forEach(System.out::println);
                     }
-                    case "6" -> { // Aqui quis demonstar dados na pasta data entao movi o csv para la criando e garantindo a existencia
+                    case "6" -> { // Aqui quis demonstrar dados na pasta data entao movi o csv para la criando e garantindo a existencia
                         logger.info("6 Selecionado salvar e sair");
                         try {
                             if (arquivo.getParent() != null) {
                                 Files.createDirectories(arquivo.getParent());  // garante que pasta exista
                             }
                             banco.salvar(arquivo);
+                            extrato.salvar();
                             logger.info("Arquivo salvo em " + arquivo.toAbsolutePath());
                             System.out.println("Salvo em " + arquivo.toAbsolutePath());
                             sc.close();
@@ -99,7 +102,7 @@ public class MiniBanco {
             System.out.println("Saldo inválido. Tente novamente.");
             return;
         }
-        
+
         CrudUtils.criarConta(banco, numero, titular, saldo);
         System.out.println("Conta criada!");
     }
@@ -113,7 +116,7 @@ public class MiniBanco {
         try {
             BigDecimal v = new BigDecimal(sc.nextLine().trim());
             logger.info("Valor de depósito digitado: " + v.toString());
-            CrudUtils.depositar(banco, numero, v);
+            CrudUtils.depositar(banco, numero, v, extrato);
             System.out.println("Depósito feito.");
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
@@ -130,7 +133,7 @@ public class MiniBanco {
         try {
             BigDecimal v = new BigDecimal(sc.nextLine().trim());
             logger.info("Valor de saque digitado: " + v.toString());
-            CrudUtils.sacar(banco, numero, v);
+            CrudUtils.sacar(banco, numero, v, extrato);
             System.out.println("Saque feito.");
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
@@ -150,7 +153,7 @@ public class MiniBanco {
         try {
             BigDecimal v = new BigDecimal(sc.nextLine().trim());
             logger.info("Valor para transferência digitado: " + v.toString());
-            CrudUtils.transferir(banco, de, para, v);
+            CrudUtils.transferir(banco, de, para, v, extrato);
             System.out.println("Transferência concluída.");
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
