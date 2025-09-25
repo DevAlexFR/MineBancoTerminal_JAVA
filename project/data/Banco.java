@@ -7,14 +7,17 @@ import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 
 
 // Aqui quis separar tudo que e funcionalidade de Banco no caso criar conta, transferir, salvar ou carregar o dado do banco... 
 public class Banco {
+    private static final Logger logger = Logger.getLogger(Banco.class.getName());
     private final Map<String, Conta> contas = new HashMap<>();
 
     public Conta criarConta(String numero, String titular, BigDecimal saldoInicial) {
+        logger.info("Criando conta - Número: " + numero + ", Titular: " + titular + ", Saldo inicial: " + saldoInicial);
         if (contas.containsKey(numero))
             throw new IllegalArgumentException("Conta já existe.");
         Conta c = new Conta(numero, titular, saldoInicial);
@@ -26,12 +29,14 @@ public class Banco {
         Conta c = contas.get(numero);
         if (c == null)
             throw new NoSuchElementException("Conta não encontrada: " + numero);
+            logger.severe("Conta não encontrada: " + numero);
         return c;
     }
 
     public void transferir(String de, String para, BigDecimal valor) {
         if (de.equals(para))
             throw new IllegalArgumentException("Contas de origem e destino não podem ser iguais.");
+            logger.severe("Contas de origem e destino não podem ser iguais.");
         Conta origem = getConta(de);
         Conta destino = getConta(para);
         origem.sacar(valor);
